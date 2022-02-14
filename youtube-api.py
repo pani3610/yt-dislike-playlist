@@ -56,7 +56,7 @@ def main():
     try:
         while(True):
             request = youtube.videos().list(part="snippet",
-            maxResults=50,myRating="like",pageToken=token)
+            maxResults=50,myRating="dislike",pageToken=token)
             response = request.execute()
             vid_list.extend(response["items"])
             token = response["nextPageToken"]
@@ -65,7 +65,7 @@ def main():
         pass
     finally:
         store_json(response,'last_response')
-        store_json({'liked videos':vid_list}, 'liked_vid')
+        store_json({'disliked videos':vid_list}, 'disliked_vid')
         print(len(vid_list))
 
 if __name__ == "__main__":
