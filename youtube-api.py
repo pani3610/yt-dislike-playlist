@@ -4,12 +4,13 @@
 # See instructions for running these code samples locally:
 # https://developers.google.com/explorer-help/code-samples#python
 
-import os
+# import os
+import json
 
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
-import json
+
 
 scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
 
@@ -17,10 +18,10 @@ def store_json(response:dict,name:str ):
     with open(name+'.json','w') as response_json:
         json.dump(response,response_json,indent=4)
 
-def main():
+def authenticate():
     # Disable OAuthlib's HTTPS verification when running locally.
     # *DO NOT* leave this option enabled in production.
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+    #os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
     api_service_name = "youtube"
     api_version = "v3"
@@ -33,24 +34,13 @@ def main():
     youtube = googleapiclient.discovery.build(
         api_service_name, api_version, credentials=credentials)
 
-    # channel_request = youtube.channels().list(
-    #     part="contentDetails",
-    #     mine=True
-    # )
-    
-    # playlist_request = youtube.playlists().list(
-    #     part="snippet,contentDetails",
-    #     maxResults=25,
-    #     mine=True
-    # )
-    # channel_response = channel_request.execute()
-    # playlist_response = playlist_request.execute()
+    print('type:',type(youtube))
+    return(youtube)
 
-    # store_json(channel_response,'ch_json')
-    # store_json(playlist_response, 'pl_json')    
+   
 
+def retrieve_disliked_video_list(youtube):
     token = None
-
     vid_list = []
 
     try:
@@ -60,13 +50,22 @@ def main():
             response = request.execute()
             vid_list.extend(response["items"])
             token = response["nextPageToken"]
+    
     except KeyError:
         print('Key Error reported')
         pass
+    
     finally:
+        if response["pageInfo"]["totalResults"] != len(vid_list):
+            print('List Incomplete.',end =' ')
+        print(f'{len(vid_list)}/{response["pageInfo"]["totalResults"]} videos listed')
         store_json(response,'last_response')
         store_json({'disliked videos':vid_list}, 'disliked_vid')
         print(len(vid_list))
+
+def main():
+    youtube = authenticate()
+    retrieve_disliked_video_list(youtube)
 
 if __name__ == "__main__":
     main()
